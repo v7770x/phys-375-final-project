@@ -1,4 +1,4 @@
-#all of the constants to be used in the project
+# all of the constants to be used in the project
 
 pi = 3.14159265358979323846
 h = 6.62607004e-34
