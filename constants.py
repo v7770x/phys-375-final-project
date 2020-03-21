@@ -12,9 +12,21 @@ X = 0.734  # the X, Y, Z constants were taken from the OPAL database, and are pl
 Y = 0.25
 Z = 0.016
 gamma = 5/3
-Xcno = 0.03*X
+X_CNO = 0.03*X
 mu = (2*X + 0.75*Y + 0.5*Z)**-1
 kappa_es = 0.02*(1 + X)
+
+#error tolerance between 4th and 5th order rk
+tol_rk_error = 1e-2
+
+#other error tolerances
+tau_infinity_margin = 1e-1
+tau_inf_minus_tau_margin = 1e-3
+
+#step size bounds:
+MIN_STEP_SIZE = 100 #m
+MAX_STEP_SIZE = 1e6 #m
+
 
 """
 Scipy constants: https://docs.scipy.org/doc/scipy/reference/constants.html
