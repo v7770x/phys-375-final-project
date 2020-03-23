@@ -7,6 +7,7 @@ from constants import *
 Equation definitions:
 """
 
+
 # pressure - P(rho, T)
 def calc_P(rho, T):
     return ((3*const.pi**2)**(2/3)/5)*(const.hbar**2/const.m_e)*(rho/const.m_p)**(5/3) + rho*(const.k*T/mu/const.m_p) + (1/3)*a*T**4
@@ -54,19 +55,19 @@ def calc_kappa(rho, T):
 
 # r derivative of Tau
 def calc_dtau_dr(rho, T):
-    return calc_kappa(rho,T)*rho
+    return calc_kappa(rho, T)*rho
 
 
 # r derivative of T
 def calc_dT_dr(rho, T, r, M, L):
     if r == 0:
         return 0.0
-    return - min(3*calc_kappa(rho,T)*rho*L/16/const.pi/a/const.c/T**3/(r**2), (1 - 1/gamma)*(T/calc_P(rho,T)*const.G*M*rho/(r**2)))
+    return - min(3*calc_kappa(rho, T)*rho*L/16/const.pi/a/const.c/T**3/(r**2), (1 - 1/gamma)*(T/calc_P(rho, T)*const.G*M*rho/(r**2)))
 
 
 # r derivative of Luminousity
 def calc_dL_dr(rho, T, r):
-    return 4*const.pi*(r**2)*rho*(calc_epsilon(rho,T))
+    return 4*const.pi*(r**2)*rho*(calc_epsilon(rho, T))
 
 
 # r derivative of mass
@@ -81,10 +82,13 @@ def calc_drho_dr(rho, T, r, M, L):
     return -(const.G*M*rho/r**2 + calc_dP_dT(rho, T)*calc_dT_dr(rho, T, r, M, L))/calc_dP_drho(rho,T)
 
 
-'''Wrapper functions used for generic integration function
+'''
+    Wrapper functions used for generic integration function
     Pass in a dictionary of all parameters in each function, and it 
     will call the appropriate function with the appropriate parameters
  '''
+
+
 def calc_dtau_dr_wrapper(params):
     return calc_dtau_dr(params["rho"], params["T"])
 
