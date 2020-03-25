@@ -40,7 +40,7 @@ def calc_epsilon(rho, T):
 
 # ff opacity (k_ff)
 def calc_kappa_ff(rho, T):
-    return (1e24)*(Z + 0.0001)*(rho/1e3)**0.7*T**-3.5
+    return (1e24)*(Z + 0.0001)*(rho/1e3)**0.7*T**(-3.5)
 
 
 # H- opacity (k_H)
@@ -89,17 +89,17 @@ def calc_drho_dr(rho, T, r, M, L):
  '''
 
 
-def calc_dtau_dr_wrapper(params):
-    return calc_dtau_dr(params["rho"], params["T"])
+def calc_dtau_dr_wrapper(r_val, param_vals):
+    return calc_dtau_dr(param_vals[PARAM_INDS["rho"]], param_vals[PARAM_INDS["T"]])
 
-def calc_dT_dr_wrapper(params):
-    return calc_dT_dr(params["rho"], params["T"], params["r"], params["M"], params["L"])
+def calc_dT_dr_wrapper(r_val, param_vals):
+    return calc_dT_dr(param_vals[PARAM_INDS["rho"]], param_vals[PARAM_INDS["T"]], r_val, param_vals[PARAM_INDS["M"]], param_vals[PARAM_INDS["L"]])
 
-def calc_dL_dr_wrapper(params):
-    return calc_dL_dr(params["rho"], params["T"], params["r"])
+def calc_dL_dr_wrapper(r_val, param_vals):
+    return calc_dL_dr(param_vals[PARAM_INDS["rho"]], param_vals[PARAM_INDS["T"]], r_val)
 
-def calc_dM_dr_wrapper(params):
-    return calc_dM_dr(params["rho"], params["r"])
+def calc_dM_dr_wrapper(r_val, param_vals):
+    return calc_dM_dr(param_vals[PARAM_INDS["rho"]], r_val)
 
-def calc_drho_dr_wrapper(params):
-    return calc_drho_dr(params["rho"], params["T"], params["r"], params["M"], params["L"])
+def calc_drho_dr_wrapper(r_val, param_vals):
+    return calc_drho_dr(param_vals[PARAM_INDS["rho"]], param_vals[PARAM_INDS["T"]], r_val, param_vals[PARAM_INDS["M"]], param_vals[PARAM_INDS["L"]])
