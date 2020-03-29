@@ -55,7 +55,8 @@ def find_r_star_index(tau_vals):
             num_vals = number of values solved for'''
 def solve_eqns(T_c, rho_c):
     # declare arrays/dictionaries and other necessary variables
-    MS_params = {"r": [0.0], "rho": [rho_c], "T": [T_c], "M": [0.0], "L": [0.0], "tau": [0.0]}
+    MS_params = {"r": [R_0], "rho": [rho_c], "T": [T_c], "M": [4*const.pi/3*R_0**3*rho_c],
+         "L": [4*const.pi/3*R_0**3*rho_c*calc_epsilon(rho_c, T_c)], "tau": [calc_kappa(rho_c, T_c)*rho_c*R_0]}
     
     #create list of derivative functions
     d_dr_functions_arr = [calc_drho_dr]*len(PARAM_INDS)

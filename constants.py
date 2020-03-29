@@ -30,6 +30,8 @@ MAX_STEP_SIZE = 1e6 #m
 
 #keep track of parameter indicies
 PARAM_INDS = {"rho": 0, "T": 1, "M": 2, "L": 3, "tau": 4}
+
+R_0 = 1e-2
 """
 Scipy constants: https://docs.scipy.org/doc/scipy/reference/constants.html
 
