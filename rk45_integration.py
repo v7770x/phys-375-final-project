@@ -1,5 +1,6 @@
 from constants import *
 # from copy import deepcopy
+from ms_functions import *
 import numpy as np
 
 
@@ -8,25 +9,23 @@ Add a certain amount to key values in the ODEs, useful for calculating the next 
 '''
 
 
-# def add_to_vals(params, t_val, y_val):
-#     param_dict = deepcopy(params)
-#     param_dict["rho"] += y_val
-#     param_dict["tau"] += y_val
-#     param_dict["M"] += y_val
-#     param_dict["L"] += y_val
-#     param_dict["T"] += y_val
-#     param_dict["r"] += t_val
-#     return param_dict
+def apply_funcs(funcs, r, y_arr):
+    # rho = y_arr[0]
+    # T = y_arr[1]
+    # M = y_arr[2]
+    # L = y_arr[3]
+    # # tau = y_arr[PARAM_INDS["tau"]]
 
+    # drho = calc_drho_dr(M,rho,r,T,L)
+    # dT = calc_dT_dr(M, rho, r, T, L)
+    # dM = calc_dM_dr(rho, r)
+    # dL = calc_dL_dr(rho, r, T)
+    # dtau = calc_dtau_dr(rho,T)
+    
+    
+    # return np.array([drho, dT, dM, dL, dtau], float)
 
-# def add(params, next_r_val, y_vals_arr):
-#     param_dict = deepcopy(params)
-#     for i, param in enumerate(param_dict):
-#         param_dict[param] += y_vals_arr
-
-
-def apply_funcs(funcs, t, y_arr):
-    return np.array([f(t, y_arr) for f in funcs])
+    return np.array([f(r, y_arr) for f in funcs], float)
 
 '''
 perform one step of rk45 integration and return the next step size sh
@@ -40,12 +39,13 @@ def rk45_step(h, funcs, t, y_arr, tol_error):
 # def rk45_step(h, funcs, params_dict, y_arr, t, tol_error):
 
     #####testing w/ rk4 integration########
-    # k1 = h*f(params)
-    # k2 = h*f(add_to_vals(params, 0.5*h, 0.5*k1))
-    # k3 = h*f(add_to_vals(params, 0.5*h, 0.5*k2))
-    # k4 = h*f(add_to_vals(params, h, k3))
-    # y_next =  params[y] + (k1 + 2.0*k2 + 2.0*k3 + k4)/6.0
-    # return (h, y_next)
+    # k1 = h*apply_funcs(funcs, t, y_arr)
+    # k2 = h*apply_funcs(funcs, t + 0.5*h, y_arr + 0.5*k1)
+    # k3 = h*apply_funcs(funcs, t + 0.5*h, y_arr + 0.5*k2)
+    # k4 = h*apply_funcs(funcs, t + h, y_arr + k3)
+    # next_y_arr = y_arr + (k1 + 2.0*k2 + 2.0*k3 + k4)/6.0
+
+    # return (h,next_y_arr)
 
     # calculate next k values
     k1 = h*apply_funcs(funcs, t,            y_arr)
@@ -60,6 +60,13 @@ def rk45_step(h, funcs, t, y_arr, tol_error):
     next_z_arr = y_arr + 16/135*k1 + 6656/12825*k3 + 28561/56430*k4 - 9/50*k5 + 2/55*k6
 
     # calculate minimum adaptive scaling factor
+    # err = np.sqrt(np.sum(np.power(next_y_arr - next_z_arr,2)))
+    # print(err)
+    # h_next = h
+    # if err >1:
+    #     h_next = 2.0*h
+    # else:
+    #     h_next = h/2.0
 
     #find difference b/w 4th and 5th order rk approximations
     diff = np.fabs(next_z_arr - next_y_arr)
@@ -79,17 +86,3 @@ def rk45_step(h, funcs, t, y_arr, tol_error):
     # print("diff", diff, "s:", s, "h_next:", h_next)
 
     return (h_next, next_y_arr)
-
-# print(a)
-# def test_deriv(vals):
-#     return vals["M"]**2 + 1
-
-
-# params = {"M": 0, "r": 0}
-# step_size = 0.2
-# while params["r"] < 1.41:
-#     print(params, step_size)
-#     next_r = params["r"]+ step_size
-#     (step_size, y_next) = rk45_step(step_size, test_deriv, params, "M", 2e-5)
-#     params = {"M": y_next, "r": next_r}
-

@@ -1,4 +1,4 @@
-from main_sequence_functions import *
+from ms_functions import *
 from constants import *
 from rk45_integration import *
 import matplotlib.pyplot as plt
@@ -31,23 +31,28 @@ def generate_curr_dict(params, curr_index):
     return {param: params[param][curr_index] for param in params}
 
 def generate_integrated_params_arr(params, curr_index):
+    # return np.array([params["rho"][curr_index], params["T"][curr_index], 
+    #     params["M"][curr_index], params["L"][curr_index], params["tau"][curr_index]],float)
     curr_arr = [0.0]*len(PARAM_INDS)
     for param in PARAM_INDS:
         curr_arr[PARAM_INDS[param]] = params[param][curr_index]
-    return np.array(curr_arr)
+    return np.array(curr_arr, float)
 
 
 # function to find the index at which tau_infinity - tau = 2/3, used to define R*
 def find_r_star_index(tau_vals):
-    n_vals = len(tau_vals)
-    r_star_index = n_vals - 1
-    tau_infinity = tau_vals[r_star_index]
+    #find tau infinity
+    tau_infinity = tau_vals[-1]
+    print("tau_infinity", tau_infinity)
 
-    #keep checking previous vals of tau until tau_inf - tau approx = 2/3
-    while r_star_index>=0 and np.fabs(tau_infinity - tau_vals[r_star_index] - 2/3)> tau_inf_minus_tau_margin:
-        r_star_index -= 1
+    #find r_star index
+    r_star_index = np.argmin(np.abs(tau_infinity-np.array(tau_vals) - (2.0/3.0)))
+    print(r_star_index)
+
+    if r_star_index == 0:
+        return len(tau_vals) - 1
+    
     return r_star_index
-
 
 '''main integration function given T_c and rho_c
 
@@ -56,7 +61,7 @@ def find_r_star_index(tau_vals):
 def solve_eqns(T_c, rho_c):
     # declare arrays/dictionaries and other necessary variables
     MS_params = {"r": [R_0], "rho": [rho_c], "T": [T_c], "M": [4*const.pi/3*R_0**3*rho_c],
-         "L": [4*const.pi/3*R_0**3*rho_c*calc_epsilon(rho_c, T_c)], "tau": [calc_kappa(rho_c, T_c)*rho_c*R_0]}
+         "L": [4*const.pi/3*R_0**3*rho_c*calc_epsilon(rho_c, T_c)], "tau": [calc_kappa(rho_c, T_c)*rho_c]}
     
     #create list of derivative functions
     d_dr_functions_arr = [calc_drho_dr]*len(PARAM_INDS)
@@ -73,7 +78,7 @@ def solve_eqns(T_c, rho_c):
     curr_params_dict = generate_curr_dict(MS_params, num_vals - 1)
 
     # main integration loop, stop if mass too great or reached tau_infinity
-    while curr_params_dict["M"] < 10**3 * M_sun and not reached_tau_infinity(curr_params_dict):
+    while curr_params_dict["M"] < 10**3 * M_sun and curr_params_dict["r"]<1.0e10 and not reached_tau_infinity(curr_params_dict):
         print(curr_params_dict, "step_size: ", step_size, "   num_vals: ", num_vals)
         # increment r
         MS_params["r"].append(curr_params_dict["r"] + step_size)
@@ -87,7 +92,7 @@ def solve_eqns(T_c, rho_c):
         #update values in dictionary
         for param in PARAM_INDS:
             MS_params[param].append(next_params_arr[PARAM_INDS[param]])
-        
+
         # increment number of values, update parameter dictionary for next step of integration
         num_vals += 1
         curr_params_dict = generate_curr_dict(MS_params, num_vals - 1)
@@ -104,6 +109,20 @@ MS_params = solve_eqns(T_c, rho_c)
 # find R*
 r_star_index = find_r_star_index(MS_params["tau"])
 r_star_params = generate_curr_dict(MS_params,  r_star_index)
+
+
+#plot
+for param in MS_params:
+    MS_params[param] = np.array(MS_params[param][0:r_star_index])
+
+plt.plot(MS_params["r"], MS_params["M"]/r_star_params["M"], label ="M")
+plt.plot(MS_params["r"], MS_params["L"]/r_star_params["L"], label ="L")
+plt.plot(MS_params["r"], MS_params["T"]/T_c, label ="T")
+# plt.plot(MS_params["r"], MS_params["L"]/r_star_params["L"], label ="L")
+plt.legend()
+plt.show()
+
+
 r_star_params["M"]/=M_sun
 r_star_params["L"]/=L_sun
 r_star_params["r"]/=R_sun
