@@ -46,6 +46,7 @@ def find_r_star_index(tau_vals):
     print("tau_infinity", tau_infinity)
 
     #find r_star index
+    print(np.min(np.abs(tau_infinity-np.array(tau_vals) - (2.0/3.0))))
     r_star_index = np.argmin(np.abs(tau_infinity-np.array(tau_vals) - (2.0/3.0)))
     print(r_star_index)
 
@@ -54,6 +55,18 @@ def find_r_star_index(tau_vals):
     
     return r_star_index
 
+def update_non_integrated_params(MS_params, next_params_arr):
+    T = next_params_arr[PARAM_INDS["T"]]
+    M = next_params_arr[PARAM_INDS["M"]]
+    rho = next_params_arr[PARAM_INDS["rho"]]
+    L = next_params_arr[PARAM_INDS["L"]]
+    r = MS_params["r"][-1]
+
+    MS_params["kappa"].append(calc_kappa(rho,T))
+    MS_params["P"].append(calc_P(rho,T))
+    MS_params["dL_dr"].append(calc_dL_dr(rho,r, T))
+        
+
 '''main integration function given T_c and rho_c
 
     returns: MS_params = dictionary of main sequence parameters solved for over range, 
@@ -61,7 +74,8 @@ def find_r_star_index(tau_vals):
 def solve_eqns(T_c, rho_c):
     # declare arrays/dictionaries and other necessary variables
     MS_params = {"r": [R_0], "rho": [rho_c], "T": [T_c], "M": [4*const.pi/3*R_0**3*rho_c],
-         "L": [4*const.pi/3*R_0**3*rho_c*calc_epsilon(rho_c, T_c)], "tau": [calc_kappa(rho_c, T_c)*rho_c]}
+         "L": [4*const.pi/3*R_0**3*rho_c*calc_epsilon(rho_c, T_c)], "tau": [calc_kappa(rho_c, T_c)*rho_c]
+         , "kappa": [calc_kappa(rho_c, T_c)], "P": [calc_P(rho_c,T_c)], "dL_dr": [calc_dL_dr(rho_c, R_0, T_c)]}
     
     #create list of derivative functions
     d_dr_functions_arr = [calc_drho_dr]*len(PARAM_INDS)
@@ -89,9 +103,23 @@ def solve_eqns(T_c, rho_c):
         #go through 1 step of rk 45 integration
         (step_size, next_params_arr) = rk45_step(step_size, d_dr_functions_arr, curr_params_dict["r"], curr_params_arr, TOL_RK_ERROR)
 
-        #update values in dictionary
+        #update integrated values in dictionary
         for param in PARAM_INDS:
             MS_params[param].append(next_params_arr[PARAM_INDS[param]])
+        
+        # T = next_params_arr[PARAM_INDS["T"]]
+        # M = next_params_arr[PARAM_INDS["M"]]
+        # rho = next_params_arr[PARAM_INDS["rho"]]
+        # L = next_params_arr[PARAM_INDS["L"]]
+        # r = MS_params["r"][-1]
+
+        # MS_params["kappa"].append(calc_kappa(rho,T))
+        # MS_params["P"].append(calc_P(rho,T))
+        # MS_params["dL_dr"].append(calc_dL_dr(rho,r, T))
+        update_non_integrated_params(MS_params, next_params_arr)
+        
+        #update all values in dictionary
+
 
         # increment number of values, update parameter dictionary for next step of integration
         num_vals += 1
@@ -118,8 +146,19 @@ for param in MS_params:
 plt.plot(MS_params["r"], MS_params["M"]/r_star_params["M"], label ="M")
 plt.plot(MS_params["r"], MS_params["L"]/r_star_params["L"], label ="L")
 plt.plot(MS_params["r"], MS_params["T"]/T_c, label ="T")
+plt.plot(MS_params["r"], MS_params["rho"]/rho_c, label ="rho")
 # plt.plot(MS_params["r"], MS_params["L"]/r_star_params["L"], label ="L")
 plt.legend()
+
+plt.figure(2)
+plt.plot(MS_params["r"], MS_params["P"]/ MS_params["P"][0], label= "P")
+plt.legend()
+
+plt.figure(3)
+plt.plot(MS_params["r"], np.log10(MS_params["kappa"]), label= "kappa")
+plt.legend()
+
+
 plt.show()
 
 
