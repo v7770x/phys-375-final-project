@@ -18,15 +18,15 @@ mu = (2*X + 0.75*Y + 0.5*Z)**-1
 kappa_es = 0.02*(1 + X)
 
 #error tolerance between 4th and 5th order rk
-TOL_RK_ERROR = 1e-6
+TOL_RK_ERROR = 1e-4
 
 #other error tolerances
 tau_infinity_margin = 1e-1
 tau_inf_minus_tau_margin = 1e-3
 
 #step size bounds:
-MIN_STEP_SIZE = 1000 #m
-MAX_STEP_SIZE = 1e6 #m
+MIN_STEP_SIZE = 5000 #m
+MAX_STEP_SIZE = 7e6 #m
 
 #keep track of parameter indicies
 PARAM_INDS = {"rho": 0, "T": 1, "M": 2, "L": 3, "tau": 4}

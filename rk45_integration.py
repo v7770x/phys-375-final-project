@@ -10,21 +10,6 @@ Add a certain amount to key values in the ODEs, useful for calculating the next 
 
 
 def apply_funcs(funcs, r, y_arr):
-    # rho = y_arr[0]
-    # T = y_arr[1]
-    # M = y_arr[2]
-    # L = y_arr[3]
-    # # tau = y_arr[PARAM_INDS["tau"]]
-
-    # drho = calc_drho_dr(M,rho,r,T,L)
-    # dT = calc_dT_dr(M, rho, r, T, L)
-    # dM = calc_dM_dr(rho, r)
-    # dL = calc_dL_dr(rho, r, T)
-    # dtau = calc_dtau_dr(rho,T)
-    
-    
-    # return np.array([drho, dT, dM, dL, dtau], float)
-
     return np.array([f(r, y_arr) for f in funcs], float)
 
 '''
@@ -35,7 +20,7 @@ inputs: h = step_size, funcs = array of derivative wrapper functions,
         y = target param, tol_error = tolerance in error between 4th and 5th order approximations
 outputs: h_next = next possible step size, next_y_arr = np array of updated dependent variable values
 '''
-def rk45_step(h, funcs, t, y_arr, tol_error):
+def rk45_step(h, funcs, t, y_arr, tol_error, T_c):
 # def rk45_step(h, funcs, params_dict, y_arr, t, tol_error):
 
     #####testing w/ rk4 integration########
@@ -61,6 +46,9 @@ def rk45_step(h, funcs, t, y_arr, tol_error):
 
     # calculate minimum adaptive scaling factor
     # err = np.sqrt(np.sum(np.power(next_y_arr - next_z_arr,2)))
+    # s = (1e15/(2*err))**1/4
+    
+    
     # print(err)
     # h_next = h
     # if err >1:
@@ -70,17 +58,30 @@ def rk45_step(h, funcs, t, y_arr, tol_error):
 
     #find difference b/w 4th and 5th order rk approximations
     diff = np.fabs(next_z_arr - next_y_arr)
+    print(diff)
+    
 
+
+    # h_next = h* 0.9*max(min(s,2), 0.5)
+    # print("h_next:", h_next, "s: ", s)
+    
+    #make max step size smaller closer to surface and error margin smaller
+    max_step_size = MAX_STEP_SIZE
+    if next_y_arr[PARAM_INDS["T"]]/T_c < 0.01:
+        max_step_size = 10000
+        tol_error = 1e-7
+    
     #avoid division by 0
     is_zero = diff==0
     s = (np.fabs(next_y_arr)* tol_error/(2*(diff + is_zero )) )**(1/4) + 4*is_zero
 
     #make sure scaling factor does not grow or fall at an unbounded rate
-    h_next = h* 0.9*max(min(np.min(s),2), 0.5)
+    h_next = h* max(min(np.min(s),2), 0.5)
+
 
     #make sure the step size is not too small and not too large:
-    if(h_next > MAX_STEP_SIZE):
-        h_next = MAX_STEP_SIZE
+    if(h_next > max_step_size):
+        h_next = max_step_size
     if h_next < MIN_STEP_SIZE:
         h_next = MIN_STEP_SIZE
     # print("diff", diff, "s:", s, "h_next:", h_next)

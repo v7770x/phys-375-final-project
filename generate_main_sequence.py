@@ -46,9 +46,9 @@ def find_r_star_index(tau_vals):
     print("tau_infinity", tau_infinity)
 
     #find r_star index
-    print(np.min(np.abs(tau_infinity-np.array(tau_vals) - (2.0/3.0))))
+    # print(np.min(np.abs(tau_infinity-np.array(tau_vals) - (2.0/3.0))))
     r_star_index = np.argmin(np.abs(tau_infinity-np.array(tau_vals) - (2.0/3.0)))
-    print(r_star_index)
+    # print(r_star_index)
 
     if r_star_index == 0:
         return len(tau_vals) - 1
@@ -66,6 +66,9 @@ def update_non_integrated_params(MS_params, next_params_arr):
     MS_params["P"].append(calc_P(rho,T))
     MS_params["dL_dr"].append(calc_dL_dr(rho,r, T))
         
+def f_rho_c(r_star_params):
+   return (r_star_params["L"] - 4*const.pi*sigma*r_star_params["r"]**2*r_star_params["T"]**4)/ \
+        (4*const.pi*sigma*r_star_params["r"]**2*r_star_params["T"]**4*r_star_params["L"])**1/2
 
 '''main integration function given T_c and rho_c
 
@@ -101,26 +104,15 @@ def solve_eqns(T_c, rho_c):
         curr_params_arr = generate_integrated_params_arr(MS_params, num_vals - 1)
 
         #go through 1 step of rk 45 integration
-        (step_size, next_params_arr) = rk45_step(step_size, d_dr_functions_arr, curr_params_dict["r"], curr_params_arr, TOL_RK_ERROR)
+        (step_size, next_params_arr) = rk45_step(step_size, d_dr_functions_arr, curr_params_dict["r"], curr_params_arr, TOL_RK_ERROR, T_c)
 
         #update integrated values in dictionary
         for param in PARAM_INDS:
             MS_params[param].append(next_params_arr[PARAM_INDS[param]])
         
-        # T = next_params_arr[PARAM_INDS["T"]]
-        # M = next_params_arr[PARAM_INDS["M"]]
-        # rho = next_params_arr[PARAM_INDS["rho"]]
-        # L = next_params_arr[PARAM_INDS["L"]]
-        # r = MS_params["r"][-1]
-
-        # MS_params["kappa"].append(calc_kappa(rho,T))
-        # MS_params["P"].append(calc_P(rho,T))
-        # MS_params["dL_dr"].append(calc_dL_dr(rho,r, T))
+        #update all values in dictionary
         update_non_integrated_params(MS_params, next_params_arr)
         
-        #update all values in dictionary
-
-
         # increment number of values, update parameter dictionary for next step of integration
         num_vals += 1
         curr_params_dict = generate_curr_dict(MS_params, num_vals - 1)
@@ -129,6 +121,7 @@ def solve_eqns(T_c, rho_c):
 
 # declare ICs
 rho_c = 58560.0
+# rho_c = 70000.0
 T_c = 8.23e6
 
 # solve the equations with the ICs
@@ -143,11 +136,14 @@ r_star_params = generate_curr_dict(MS_params,  r_star_index)
 for param in MS_params:
     MS_params[param] = np.array(MS_params[param][0:r_star_index])
 
+#find f_rho_c
+print("rho_c:",rho_c, "F_rhoc = ", f_rho_c(r_star_params))
+
+#plot
 plt.plot(MS_params["r"], MS_params["M"]/r_star_params["M"], label ="M")
 plt.plot(MS_params["r"], MS_params["L"]/r_star_params["L"], label ="L")
 plt.plot(MS_params["r"], MS_params["T"]/T_c, label ="T")
 plt.plot(MS_params["r"], MS_params["rho"]/rho_c, label ="rho")
-# plt.plot(MS_params["r"], MS_params["L"]/r_star_params["L"], label ="L")
 plt.legend()
 
 plt.figure(2)
@@ -158,12 +154,11 @@ plt.figure(3)
 plt.plot(MS_params["r"], np.log10(MS_params["kappa"]), label= "kappa")
 plt.legend()
 
-
 plt.show()
 
 
-r_star_params["M"]/=M_sun
-r_star_params["L"]/=L_sun
-r_star_params["r"]/=R_sun
+# r_star_params["M"]/=M_sun
+# r_star_params["L"]/=L_sun
+# r_star_params["r"]/=R_sun
 print("r_star_params:", r_star_params)
 
