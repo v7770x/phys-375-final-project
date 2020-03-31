@@ -21,7 +21,7 @@ def reached_tau_infinity(params):
     kappa = calc_kappa(params["rho"], params["T"])
     # if drho_dr != 0:
     #     print("delta_tau: ", kappa * params["rho"]**2/np.fabs(drho_dr), "  drho_dr: ", drho_dr, "  mult_top: ",  kappa * params["rho"]**2)
-    if drho_dr != 0 and  kappa * params["rho"]**2/np.fabs(drho_dr) < tau_infinity_margin:
+    if np.isnan(drho_dr) or (drho_dr != 0 and  kappa * params["rho"]**2/np.fabs(drho_dr) < tau_infinity_margin):
         return True
     return False
 
@@ -43,7 +43,7 @@ def generate_integrated_params_arr(params, curr_index):
 def find_r_star_index(tau_vals):
     #find tau infinity
     tau_infinity = tau_vals[-1]
-    print("tau_infinity", tau_infinity)
+    # print("tau_infinity", tau_infinity)
 
     #find r_star index
     # print(np.min(np.abs(tau_infinity-np.array(tau_vals) - (2.0/3.0))))
@@ -54,6 +54,12 @@ def find_r_star_index(tau_vals):
         return len(tau_vals) - 1
     
     return r_star_index
+
+def get_r_star_params(MS_params):
+    r_star_index = find_r_star_index(MS_params["tau"])
+    r_star_params = generate_curr_dict(MS_params,  r_star_index)
+    return (r_star_params, r_star_index)
+
 
 def update_non_integrated_params(MS_params, next_params_arr):
     T = next_params_arr[PARAM_INDS["T"]]
@@ -66,9 +72,14 @@ def update_non_integrated_params(MS_params, next_params_arr):
     MS_params["P"].append(calc_P(rho,T))
     MS_params["dL_dr"].append(calc_dL_dr(rho,r, T))
         
-def f_rho_c(r_star_params):
-   return (r_star_params["L"] - 4*const.pi*sigma*r_star_params["r"]**2*r_star_params["T"]**4)/ \
-        (4*const.pi*sigma*r_star_params["r"]**2*r_star_params["T"]**4*r_star_params["L"])**1/2
+def f_rho_c(MS_params):
+    #find surface params
+    (r_star_params, r_star_index) = get_r_star_params(MS_params)
+
+    #find f
+    numerator = (r_star_params["L"] - 4.0*const.pi*sigma*(r_star_params["r"]**2.0)*(r_star_params["T"]**4.0))
+    denominator = np.sqrt(4.0*const.pi*sigma*(r_star_params["r"]**2.0)*(r_star_params["T"]**4.0)*r_star_params["L"])
+    return numerator/denominator
 
 '''main integration function given T_c and rho_c
 
@@ -96,7 +107,7 @@ def solve_eqns(T_c, rho_c):
 
     # main integration loop, stop if mass too great or reached tau_infinity
     while curr_params_dict["M"] < 10**3 * M_sun and curr_params_dict["r"]<1.0e10 and not reached_tau_infinity(curr_params_dict):
-        print(curr_params_dict, "step_size: ", step_size, "   num_vals: ", num_vals)
+        # print(curr_params_dict, "step_size: ", step_size, "   num_vals: ", num_vals)
         # increment r
         MS_params["r"].append(curr_params_dict["r"] + step_size)
 
@@ -116,49 +127,116 @@ def solve_eqns(T_c, rho_c):
         # increment number of values, update parameter dictionary for next step of integration
         num_vals += 1
         curr_params_dict = generate_curr_dict(MS_params, num_vals - 1)
+
+    #find the surface parameters, and clip the MS_param vals to the surface, make into np arrs
+    (r_star_params, r_star_index) = get_r_star_params(MS_params)
+    for param in MS_params:
+        MS_params[param] = np.array(MS_params[param][0:r_star_index])
+
     return MS_params
 
-
-# declare ICs
-rho_c = 58560.0
-# rho_c = 70000.0
-T_c = 8.23e6
-
-# solve the equations with the ICs
-MS_params = solve_eqns(T_c, rho_c)
-
-# find R*
-r_star_index = find_r_star_index(MS_params["tau"])
-r_star_params = generate_curr_dict(MS_params,  r_star_index)
+''' 
+Bisection to find rho_c given T_c
+'''
 
 
-#plot
-for param in MS_params:
-    MS_params[param] = np.array(MS_params[param][0:r_star_index])
+#testing function
+def f_rho_behavior():
+    T_c = 8.23e6
+    rho_list = []
+    f_rho_list = []
+    for rho_c in range(300, 500000, 2000):
+        MS_params = solve_eqns(T_c, rho_c)
+        r_star_index = find_r_star_index(MS_params["tau"])
+        r_star_params = generate_curr_dict(MS_params,  r_star_index)
+        f_rho = f_rho_c(MS_params)
+        print("rho_c:",rho_c, "F_rhoc = ", f_rho)
+        if not np.isnan(f_rho):
+            rho_list.append(rho_c)
+            f_rho_list.append(f_rho)
+    plt.plot(np.array(rho_list), np.array(f_rho_list), "-b")
+    plt.show()
+    return (rho_list, f_rho_list)
 
-#find f_rho_c
-print("rho_c:",rho_c, "F_rhoc = ", f_rho_c(r_star_params))
+# (rho_list, f_rho_list) = f_rho_behavior()
 
-#plot
-plt.plot(MS_params["r"], MS_params["M"]/r_star_params["M"], label ="M")
-plt.plot(MS_params["r"], MS_params["L"]/r_star_params["L"], label ="L")
-plt.plot(MS_params["r"], MS_params["T"]/T_c, label ="T")
-plt.plot(MS_params["r"], MS_params["rho"]/rho_c, label ="rho")
-plt.legend()
+#given a T_c find rho_c and the star surface parameters as well as all the data for the star
+#over the generation of the star
+def find_rho_c_params(T_c):
+    #find params at minimum and maximum rho_c, midpoint
+    rho_c_lb_params = solve_eqns(T_c, RHO_C_MIN) 
+    rho_c_ub_params = solve_eqns(T_c, RHO_C_MAX)
+    rho_c_mid_params = solve_eqns(T_c, (RHO_C_MAX + RHO_C_MIN)/2)
 
-plt.figure(2)
-plt.plot(MS_params["r"], MS_params["P"]/ MS_params["P"][0], label= "P")
-plt.legend()
+    #rho tolerances
+    RHO_C_DIFF_TOL = 1e-2
+    MAX_NUM_BISECTIONS = 30
+    RHO_C_F_TOL = 1e-2
 
-plt.figure(3)
-plt.plot(MS_params["r"], np.log10(MS_params["kappa"]), label= "kappa")
-plt.legend()
+    #keep track of num bisections
+    num_bisections = 0
 
-plt.show()
+    #calculate f_rho_c at midpoint
+    f_mid = f_rho_c(rho_c_mid_params)
+
+    #loop through until rho_c not changing much, f_rho_c less than tol, or num_bisections too large
+    while (abs(rho_c_lb_params["rho"][0] - rho_c_ub_params["rho"][0])>RHO_C_DIFF_TOL 
+        and abs(f_mid)>RHO_C_F_TOL and num_bisections<MAX_NUM_BISECTIONS):
+
+        print("num_bisections: ", num_bisections, "rho_c:", rho_c_mid_params["rho"][0], "f_rho_c", f_mid)
+
+        if np.isnan(f_mid) or f_mid > 0:
+            rho_c_ub_params = rho_c_mid_params
+        elif f_mid<0:
+            rho_c_lb_params = rho_c_mid_params
+        # else:
+        #     break
+        rho_c_mid_params = solve_eqns(T_c, (rho_c_ub_params["rho"][0] + rho_c_lb_params["rho"][0])/2)
+
+        #increment num bisections
+        num_bisections +=1
+
+        #update f_rho_c at midpoint
+        f_mid = f_rho_c(rho_c_mid_params)
+
+        # print("diff", abs(rho_c_lb_params["rho"][0] - rho_c_ub_params["rho"][0]), "f_mid", f_mid)
+    print("rho_c_final = ", rho_c_mid_params["rho"][0], "T_c", rho_c_mid_params["T"][0])
+    (r_star_params, r_star_index) = get_r_star_params(rho_c_mid_params)
+    print("generated star params: ", r_star_params)
+
+    #return
+    return rho_c_mid_params
 
 
-# r_star_params["M"]/=M_sun
-# r_star_params["L"]/=L_sun
-# r_star_params["r"]/=R_sun
-print("r_star_params:", r_star_params)
+'''Plotting functions'''
+def generate_plots(MS_params):
+    (r_star_params, r_star_index) = get_r_star_params(MS_params)
+    T_c = MS_params["T"][0]
+    rho_c = MS_params["rho"][0]
+
+    #plot r vs M, L, rho, T
+    plt.plot(MS_params["r"], MS_params["M"]/r_star_params["M"], label ="M")
+    plt.plot(MS_params["r"], MS_params["L"]/r_star_params["L"], label ="L")
+    plt.plot(MS_params["r"], MS_params["T"]/T_c, label ="T")
+    plt.plot(MS_params["r"], MS_params["rho"]/rho_c, label ="rho")
+    plt.legend()
+
+    #plot r vs P
+    plt.figure(2)
+    plt.plot(MS_params["r"], MS_params["P"]/ MS_params["P"][0], label= "P")
+    plt.legend()
+
+    #plot r vs kappa
+    plt.figure(3)
+    plt.plot(MS_params["r"], np.log10(MS_params["kappa"]), label= "kappa")
+    plt.legend()
+
+    plt.show()
+
+
+rho_c_params = find_rho_c_params(8.23e6)
+generate_plots(rho_c_params)
+
+
+
 

@@ -44,27 +44,9 @@ def rk45_step(h, funcs, t, y_arr, tol_error, T_c):
     next_y_arr = y_arr + 25/216*k1 + 1408/2565*k3 + 2197/4101*k4 - 1/5*k5
     next_z_arr = y_arr + 16/135*k1 + 6656/12825*k3 + 28561/56430*k4 - 9/50*k5 + 2/55*k6
 
-    # calculate minimum adaptive scaling factor
-    # err = np.sqrt(np.sum(np.power(next_y_arr - next_z_arr,2)))
-    # s = (1e15/(2*err))**1/4
-    
-    
-    # print(err)
-    # h_next = h
-    # if err >1:
-    #     h_next = 2.0*h
-    # else:
-    #     h_next = h/2.0
-
     #find difference b/w 4th and 5th order rk approximations
     diff = np.fabs(next_z_arr - next_y_arr)
-    print(diff)
-    
 
-
-    # h_next = h* 0.9*max(min(s,2), 0.5)
-    # print("h_next:", h_next, "s: ", s)
-    
     #make max step size smaller closer to surface and error margin smaller
     max_step_size = MAX_STEP_SIZE
     if next_y_arr[PARAM_INDS["T"]]/T_c < 0.01:

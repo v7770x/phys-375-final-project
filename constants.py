@@ -32,6 +32,11 @@ MAX_STEP_SIZE = 7e6 #m
 PARAM_INDS = {"rho": 0, "T": 1, "M": 2, "L": 3, "tau": 4}
 
 R_0 = 10
+
+#consts for bisection:
+RHO_C_MIN = 300.0
+RHO_C_MAX = 500000.0
+
 """
 Scipy constants: https://docs.scipy.org/doc/scipy/reference/constants.html
 
