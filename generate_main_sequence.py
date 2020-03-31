@@ -169,8 +169,8 @@ def find_rho_c_params(T_c):
     rho_c_mid_params = solve_eqns(T_c, (RHO_C_MAX + RHO_C_MIN)/2)
 
     #rho tolerances
-    RHO_C_DIFF_TOL = 1e-2
-    MAX_NUM_BISECTIONS = 30
+    RHO_C_DIFF_TOL = 1e-3
+    MAX_NUM_BISECTIONS = 40
     RHO_C_F_TOL = 1e-2
 
     #keep track of num bisections
@@ -200,6 +200,17 @@ def find_rho_c_params(T_c):
         f_mid = f_rho_c(rho_c_mid_params)
 
         # print("diff", abs(rho_c_lb_params["rho"][0] - rho_c_ub_params["rho"][0]), "f_mid", f_mid)
+
+    #ensure the smallest f_mid value is chosen
+    f_ub = f_rho_c(rho_c_ub_params)
+    f_lb = f_rho_c(rho_c_lb_params)
+    if f_mid > RHO_C_F_TOL and f_ub < f_mid and f_ub < f_lb:
+        rho_c_mid_params = rho_c_ub_params
+        print("ub")
+    elif f_mid > RHO_C_F_TOL and f_lb < f_mid and f_lb < f_ub:
+        rho_c_mid_params = rho_c_lb_params
+        print("lb")
+
     print("rho_c_final = ", rho_c_mid_params["rho"][0], "T_c", rho_c_mid_params["T"][0])
     (r_star_params, r_star_index) = get_r_star_params(rho_c_mid_params)
     print("generated star params: ", r_star_params)
