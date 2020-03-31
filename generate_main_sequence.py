@@ -42,16 +42,19 @@ def generate_integrated_params_arr(params, curr_index):
 # function to find the index at which tau_infinity - tau = 2/3, used to define R*
 def find_r_star_index(tau_vals):
     #find tau infinity
-    tau_infinity = tau_vals[-1]
+    tau_inf_index = len(tau_vals)-1
+    if np.isnan(tau_vals[tau_inf_index]):
+        tau_inf_index = len(tau_vals) -2
+    tau_infinity = tau_vals[tau_inf_index]
     # print("tau_infinity", tau_infinity)
 
     #find r_star index
     # print(np.min(np.abs(tau_infinity-np.array(tau_vals) - (2.0/3.0))))
-    r_star_index = np.argmin(np.abs(tau_infinity-np.array(tau_vals) - (2.0/3.0)))
+    r_star_index = np.argmin(np.abs(tau_infinity-np.array(tau_vals[0:tau_inf_index]) - (2.0/3.0)))
     # print(r_star_index)
 
     if r_star_index == 0:
-        return len(tau_vals) - 1
+        return tau_inf_index
     
     return r_star_index
 
@@ -130,6 +133,8 @@ def solve_eqns(T_c, rho_c):
 
     #find the surface parameters, and clip the MS_param vals to the surface, make into np arrs
     (r_star_params, r_star_index) = get_r_star_params(MS_params)
+    # print(r_star_params)
+    # print(MS_params["tau"])
     for param in MS_params:
         MS_params[param] = np.array(MS_params[param][0:r_star_index])
 
@@ -169,7 +174,7 @@ def find_rho_c_params(T_c):
     rho_c_mid_params = solve_eqns(T_c, (RHO_C_MAX + RHO_C_MIN)/2)
 
     #rho tolerances
-    RHO_C_DIFF_TOL = 1e-3
+    RHO_C_DIFF_TOL = 1e-2
     MAX_NUM_BISECTIONS = 40
     RHO_C_F_TOL = 1e-2
 
@@ -212,9 +217,27 @@ def find_rho_c_params(T_c):
         rho_c_mid_params = rho_c_lb_params
         print("lb")
 
-    print("rho_c_final = ", rho_c_mid_params["rho"][0], "T_c", rho_c_mid_params["T"][0])
+    #find star params and print out
+    f_mid_final = f_rho_c(rho_c_mid_params)
+    rho_c_found = rho_c_mid_params["rho"][0]
+    print("rho_c_final = ", rho_c_found, "T_c", rho_c_mid_params["T"][0], "f_rho_c", f_mid_final)
     (r_star_params, r_star_index) = get_r_star_params(rho_c_mid_params)
     print("generated star params: ", r_star_params)
+
+    #print warning if bisection limit hit
+    if num_bisections == MAX_NUM_BISECTIONS:
+        print("WARNING: max bisection limit hit")
+
+    #print warning if f_rho_mid no good:
+    if abs(f_mid_final>10):
+        print("WARNING: bisection function may not have found root, f_rho_c too high")
+
+    #print warning if rho_c near limits 
+    if rho_c_found > RHO_C_MAX - 1.0:
+        print("WARNING: RHO_C TOO HIGH, MAY NOT BE REAL STAR")
+    elif rho_c_found<RHO_C_MIN + 1.0:
+        print("WARNING: RHO_C TOO LOW, MAY NOT BE REAL STAR")
+    
 
     #return
     return rho_c_mid_params
@@ -245,10 +268,9 @@ def generate_plots(MS_params):
 
     plt.show()
 
-
-rho_c_params = find_rho_c_params(15.0e6)
+rho_c_params = find_rho_c_params(8.23e6)
 generate_plots(rho_c_params)
-
+# generate_plots(solve_eqns(8.23e6, 58000.0))
 
 
 
