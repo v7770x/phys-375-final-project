@@ -202,8 +202,9 @@ def find_rho_c_params(T_c):
         # print("diff", abs(rho_c_lb_params["rho"][0] - rho_c_ub_params["rho"][0]), "f_mid", f_mid)
 
     #ensure the smallest f_mid value is chosen
-    f_ub = f_rho_c(rho_c_ub_params)
-    f_lb = f_rho_c(rho_c_lb_params)
+    f_ub = abs(f_rho_c(rho_c_ub_params))
+    f_lb = abs(f_rho_c(rho_c_lb_params))
+    f_mid = abs(f_mid)
     if f_mid > RHO_C_F_TOL and f_ub < f_mid and f_ub < f_lb:
         rho_c_mid_params = rho_c_ub_params
         print("ub")
@@ -245,7 +246,7 @@ def generate_plots(MS_params):
     plt.show()
 
 
-rho_c_params = find_rho_c_params(8.23e6)
+rho_c_params = find_rho_c_params(15.0e6)
 generate_plots(rho_c_params)
 
 
