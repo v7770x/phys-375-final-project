@@ -270,7 +270,7 @@ def generate_plots(MS_params):
     plt.show()
 
 
-t=np.linspace(2e6,2e7,10)
+t=np.linspace(2e6,3.5e7,100)
 
 allparams=[]
 for i in t:
@@ -283,9 +283,8 @@ a=np.loadtxt("Generated_params.csv")
 x=a[:,2]
 y=a[:,4]
 plt.plot(x,y,'o')
-plt.xlim(4000,1000)
+plt.xlim(9000,1000)
 plt.xlabel('T')
 plt.ylabel('L')
 plt.yscale('log')
 plt.show()
-
