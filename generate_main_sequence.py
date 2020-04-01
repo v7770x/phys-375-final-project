@@ -272,7 +272,6 @@ def generate_plots(MS_params):
 
 # t=np.linspace(2e6,3.5e7,100)
 
-# t=[3.2e7]
 # allparams=[]
 # for i in t:
 #     rStarParams = find_rho_c_params(i)
@@ -280,7 +279,7 @@ def generate_plots(MS_params):
         
 # np.savetxt("Generated_params.csv", allparams)
 
-a=np.loadtxt("Generated_params.csv")
+a=np.loadtxt("Generated_params.csv")  #change this for nuclear values generated above
 
 x=a[:,2] #T 
 y=a[:,4] #L
@@ -302,8 +301,7 @@ plt.show()
 
 ###### TRUE MS ######
 
-# np.savetxt("compare_temp.csv", [x,n])
-d=np.loadtxt("truncated_temp.csv")
+d = list(x)[:18] + n[18:]
 
 plt.plot(d,[i/L_sun for i in y],'o')
 plt.xlim(30000,1000)
