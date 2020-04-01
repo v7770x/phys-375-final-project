@@ -270,21 +270,43 @@ def generate_plots(MS_params):
     plt.show()
 
 
-t=np.linspace(2e6,3.5e7,100)
+# t=np.linspace(2e6,3.5e7,100)
 
-allparams=[]
-for i in t:
-    rStarParams = find_rho_c_params(i)
-    allparams.append([rStarParams["r"], rStarParams["rho"], rStarParams["T"], rStarParams["M"],rStarParams["L"],rStarParams["tau"],rStarParams["kappa"],rStarParams["P"],rStarParams["dL_dr"]])
+# allparams=[]
+# for i in t:
+#     rStarParams = find_rho_c_params(i)
+#     allparams.append([rStarParams["r"], rStarParams["rho"], rStarParams["T"], rStarParams["M"],rStarParams["L"],rStarParams["tau"],rStarParams["kappa"],rStarParams["P"],rStarParams["dL_dr"]])
         
-np.savetxt("Generated_params.csv", allparams)
+# np.savetxt("Generated_params.csv", allparams)
 
 a=np.loadtxt("Generated_params.csv")
+
 x=a[:,2]
 y=a[:,4]
-plt.plot(x,y,'o')
+
+plt.plot(x,[i/L_sun for i in y],'o')
 plt.xlim(9000,1000)
-plt.xlabel('T')
-plt.ylabel('L')
+plt.xlabel('T (K)')
+plt.ylabel(r'$L/L_{sun}$')
 plt.yscale('log')
+plt.title('HR Diagram')
+plt.show()
+
+m=a[:,3]
+r=a[:,0]
+
+plt.plot([i/M_sun for i in m],[i/R_sun for i in r],'o')
+plt.xlabel(r'$M/M_{sun}$')
+plt.ylabel(r'$R/R_{sun}$')
+plt.xscale('log')
+plt.yscale('log')
+plt.title(r'$R/R_{sun}$ as a function of $M/M_{sun}$')
+plt.show()
+
+plt.plot([i/M_sun for i in m],[i/L_sun for i in y],'o')
+plt.xlabel(r'$M/M_{sun}$')
+plt.ylabel(r'$L/L_{sun}$')
+plt.xscale('log')
+plt.yscale('log')
+plt.title(r'$L/L_{sun}$ as a function of $M/M_{sun}$')
 plt.show()
