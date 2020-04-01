@@ -6,7 +6,7 @@ import numpy as np
 
 # for latex labeling
 from matplotlib import rc
-rc('text', usetex=True)
+# rc('text', usetex=True)
 
 d_dr_functions_dict = {"rho": calc_drho_dr_wrapper, "T": calc_dT_dr_wrapper, "M": calc_dM_dr_wrapper,
                     "L": calc_dL_dr_wrapper, "tau": calc_dtau_dr_wrapper}
@@ -268,7 +268,8 @@ def generate_plots(MS_params):
 
     plt.show()
 
-rho_c_params = find_rho_c_params(8.23e6)
+# rho_c_params = find_rho_c_params(8.23e6)
+rho_c_params = find_rho_c_params(3e7)
 generate_plots(rho_c_params)
 # generate_plots(solve_eqns(8.23e6, 58000.0))
 
