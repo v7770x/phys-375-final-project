@@ -289,6 +289,7 @@ plt.xlim(9000,1000)
 plt.xlabel('T (K)')
 plt.ylabel(r'$L/L_{sun}$')
 plt.yscale('log')
+plt.xscale('log')
 plt.title('HR Diagram')
 plt.show()
 
