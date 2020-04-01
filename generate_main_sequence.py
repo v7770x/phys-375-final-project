@@ -222,6 +222,7 @@ def find_rho_c_params(T_c):
     rho_c_found = rho_c_mid_params["rho"][0]
     print("rho_c_final = ", rho_c_found, "T_c", rho_c_mid_params["T"][0], "f_rho_c", f_mid_final)
     (r_star_params, r_star_index) = get_r_star_params(rho_c_mid_params)
+
     print("generated star params: ", r_star_params)
 
     #print warning if bisection limit hit
@@ -240,7 +241,7 @@ def find_rho_c_params(T_c):
     
 
     #return
-    return rho_c_mid_params
+    return r_star_params
 
 
 '''Plotting functions'''
@@ -250,28 +251,62 @@ def generate_plots(MS_params):
     rho_c = MS_params["rho"][0]
 
     #plot r vs M, L, rho, T
-    plt.plot(MS_params["r"], MS_params["M"]/r_star_params["M"], label ="M")
-    plt.plot(MS_params["r"], MS_params["L"]/r_star_params["L"], label ="L")
-    plt.plot(MS_params["r"], MS_params["T"]/T_c, label ="T")
-    plt.plot(MS_params["r"], MS_params["rho"]/rho_c, label ="rho")
+    plt.plot(MS_params["r"]/r_star_params["r"], MS_params["M"]/r_star_params["M"], label ="M")
+    plt.plot(MS_params["r"]/r_star_params["r"], MS_params["L"]/r_star_params["L"], label ="L")
+    plt.plot(MS_params["r"]/r_star_params["r"], MS_params["T"]/T_c, label ="T")
+    plt.plot(MS_params["r"]/r_star_params["r"], MS_params["rho"]/rho_c, label =r"$\rho$")
     plt.legend()
 
     #plot r vs P
     plt.figure(2)
-    plt.plot(MS_params["r"], MS_params["P"]/ MS_params["P"][0], label= "P")
+    plt.plot(MS_params["r"]/r_star_params["r"], MS_params["P"]/ MS_params["P"][0], label= "P")
     plt.legend()
 
     #plot r vs kappa
     plt.figure(3)
-    plt.plot(MS_params["r"], np.log10(MS_params["kappa"]), label= "kappa")
+    plt.plot(MS_params["r"]/r_star_params["r"], np.log10(MS_params["kappa"]), label= r"$\kappa$")
     plt.legend()
 
     plt.show()
 
-# rho_c_params = find_rho_c_params(8.23e6)
-rho_c_params = find_rho_c_params(3e7)
-generate_plots(rho_c_params)
-# generate_plots(solve_eqns(8.23e6, 58000.0))
 
+# t=np.linspace(2e6,3.5e7,100)
 
+# allparams=[]
+# for i in t:
+#     rStarParams = find_rho_c_params(i)
+#     allparams.append([rStarParams["r"], rStarParams["rho"], rStarParams["T"], rStarParams["M"],rStarParams["L"],rStarParams["tau"],rStarParams["kappa"],rStarParams["P"],rStarParams["dL_dr"]])
 
+# np.savetxt("Generated_params.csv", allparams)
+
+a=np.loadtxt("Generated_params.csv")
+
+x=a[:,2]
+y=a[:,4]
+
+plt.plot(x,[i/L_sun for i in y],'o')
+plt.xlim(9000,1000)
+plt.xlabel('T (K)')
+plt.ylabel(r'$L/L_{sun}$')
+plt.yscale('log')
+plt.title('HR Diagram')
+plt.show()
+
+m=a[:,3]
+r=a[:,0]
+
+plt.plot([i/M_sun for i in m],[i/R_sun for i in r],'o')
+plt.xlabel(r'$M/M_{sun}$')
+plt.ylabel(r'$R/R_{sun}$')
+plt.xscale('log')
+plt.yscale('log')
+plt.title(r'$R/R_{sun}$ as a function of $M/M_{sun}$')
+plt.show()
+
+plt.plot([i/M_sun for i in m],[i/L_sun for i in y],'o')
+plt.xlabel(r'$M/M_{sun}$')
+plt.ylabel(r'$L/L_{sun}$')
+plt.xscale('log')
+plt.yscale('log')
+plt.title(r'$L/L_{sun}$ as a function of $M/M_{sun}$')
+plt.show()
