@@ -272,6 +272,7 @@ def generate_plots(MS_params):
 
 # t=np.linspace(2e6,3.5e7,100)
 
+# t=[3.2e7]
 # allparams=[]
 # for i in t:
 #     rStarParams = find_rho_c_params(i)
@@ -281,19 +282,37 @@ def generate_plots(MS_params):
 
 a=np.loadtxt("Generated_params.csv")
 
-x=a[:,2]
-y=a[:,4]
+x=a[:,2] #T 
+y=a[:,4] #L
+r=a[:,0] #r
+m=a[:,3] #M
 
-plt.plot(x,[i/L_sun for i in y],'o')
-plt.xlim(9000,1000)
+n=list(map(lambda z, k: (z/(4*np.pi*sigma*(k**2)))**(1/4), y, r))
+
+plt.plot(n,[i/L_sun for i in y],'o', label='Calculated')
+plt.scatter(x,[i/L_sun for i in y], facecolors='none', edgecolors='k', label='Code')
+plt.xlim(30000,1000)
 plt.xlabel('T (K)')
 plt.ylabel(r'$L/L_{sun}$')
+plt.xscale('log')
+plt.yscale('log')
+plt.title('HR Diagram')
+plt.legend()
+plt.show()
+
+###### TRUE MS ######
+
+# np.savetxt("compare_temp.csv", [x,n])
+d=np.loadtxt("truncated_temp.csv")
+
+plt.plot(d,[i/L_sun for i in y],'o')
+plt.xlim(30000,1000)
+plt.xlabel('T (K)')
+plt.ylabel(r'$L/L_{sun}$')
+plt.xscale('log')
 plt.yscale('log')
 plt.title('HR Diagram')
 plt.show()
-
-m=a[:,3]
-r=a[:,0]
 
 plt.plot([i/M_sun for i in m],[i/R_sun for i in r],'o')
 plt.xlabel(r'$M/M_{sun}$')
