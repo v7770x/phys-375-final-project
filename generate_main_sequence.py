@@ -6,7 +6,7 @@ import numpy as np
 
 # for latex labeling
 from matplotlib import rc
-rc('text', usetex=True)
+# rc('text', usetex=True)
 
 d_dr_functions_dict = {"rho": calc_drho_dr_wrapper, "T": calc_dT_dr_wrapper, "M": calc_dM_dr_wrapper,
                     "L": calc_dL_dr_wrapper, "tau": calc_dtau_dr_wrapper}
@@ -222,7 +222,7 @@ def find_rho_c_params(T_c):
     rho_c_found = rho_c_mid_params["rho"][0]
     print("rho_c_final = ", rho_c_found, "T_c", rho_c_mid_params["T"][0], "f_rho_c", f_mid_final)
     (r_star_params, r_star_index) = get_r_star_params(rho_c_mid_params)
-    
+
     print("generated star params: ", r_star_params)
 
     #print warning if bisection limit hit
@@ -276,7 +276,7 @@ def generate_plots(MS_params):
 # for i in t:
 #     rStarParams = find_rho_c_params(i)
 #     allparams.append([rStarParams["r"], rStarParams["rho"], rStarParams["T"], rStarParams["M"],rStarParams["L"],rStarParams["tau"],rStarParams["kappa"],rStarParams["P"],rStarParams["dL_dr"]])
-        
+
 # np.savetxt("Generated_params.csv", allparams)
 
 a=np.loadtxt("Generated_params.csv")  #change this for nuclear values generated above
@@ -295,6 +295,7 @@ plt.xlabel('T (K)')
 plt.ylabel(r'$L/L_{sun}$')
 plt.xscale('log')
 plt.yscale('log')
+plt.xscale('log')
 plt.title('HR Diagram')
 plt.legend()
 plt.show()
